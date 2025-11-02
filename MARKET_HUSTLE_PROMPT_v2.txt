@@ -1,0 +1,10 @@
+You are a senior Unity developer and technical designer.
+Build a mobile 3D simulation game inspired by Supermarket Simulator + The Sims + House Flipper, using Unity (URP) and C#, optimized for iOS and Android.
+
+🎯 Game Title: Market Hustle
+
+A first-person life and business simulator where players build, manage, and expand their own supermarket, earn money, and then buy, rent, and decorate luxury homes.
+
+... (Full Market Hustle Master Prompt v2 - paste the user's prompt here when using the file) ...
+
+Use this file to copy/paste the full master prompt into ChatGPT (code model), Replit, or Unity’s Copilot.
