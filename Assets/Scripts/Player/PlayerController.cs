@@ -1,77 +1,125 @@
-using System;
 using UnityEngine;
 
 namespace MarketHustle.Player
 {
     /// <summary>
-    /// Mobile-friendly first-person player controller.
-    /// Hook this into a CharacterController or Rigidbody as needed.
-    /// Movement input is expected to come from a floating joystick UI (set joystickInput from UI script).
-    /// Look input for mobile can be set via swipe delta values or an on-screen look control.
+    /// Third-person player controller with mobile support.
+    /// Handles movement, camera following, and basic interactions.
     /// </summary>
     public class PlayerController : MonoBehaviour
     {
         [Header("Movement")]
-        public float moveSpeed = 4f;
-        public float runMultiplier = 1.8f;
-
-        [Header("Look")]
-        public float lookSpeed = 0.2f;
+        public float moveSpeed = 5f;
+        public float rotationSpeed = 10f;
         public Transform cameraHolder;
 
-        [Header("References")]
-        public CharacterController characterController;
+        [Header("Mobile Controls")]
+        public RuntimeJoystick joystick;
+        public float joystickDeadzone = 0.1f;
 
-        // Inputs (set from UI/InputHandler)
-        [HideInInspector] public Vector2 joystickInput = Vector2.zero; // x = horizontal, y = forward
-        [HideInInspector] public Vector2 lookDelta = Vector2.zero; // from swipe
+        private CharacterController characterController;
+        private Vector3 moveDirection;
+        private bool isMoving;
 
-        float pitch = 0f;
-
-        void Reset()
+        void Start()
         {
             characterController = GetComponent<CharacterController>();
-            cameraHolder = Camera.main ? Camera.main.transform : null;
+            if (characterController == null)
+            {
+                characterController = gameObject.AddComponent<CharacterController>();
+                characterController.height = 2f;
+                characterController.center = new Vector3(0f, 1f, 0f);
+            }
+
+            // Find joystick if not assigned
+            if (joystick == null)
+            {
+                joystick = FindObjectOfType<RuntimeJoystick>();
+            }
+
+            // Set up camera if not assigned
+            if (cameraHolder == null)
+            {
+                var cam = Camera.main;
+                if (cam != null)
+                {
+                    cameraHolder = cam.transform;
+                }
+            }
         }
 
         void Update()
         {
-            HandleLook();
-            HandleMove();
+            HandleMovement();
+            HandleRotation();
         }
 
-        void HandleLook()
+        void HandleMovement()
         {
-            if (cameraHolder == null) return;
+            Vector3 inputDirection = Vector3.zero;
 
-            // Apply look via lookDelta (set by touch/swipe)
-            Vector2 d = lookDelta * lookSpeed;
-            pitch -= d.y;
-            pitch = Mathf.Clamp(pitch, -80f, 80f);
-            cameraHolder.localEulerAngles = new Vector3(pitch, 0f, 0f);
-            transform.Rotate(Vector3.up, d.x);
+            // Keyboard input (fallback for testing)
+            float horizontal = Input.GetAxis("Horizontal");
+            float vertical = Input.GetAxis("Vertical");
 
-            // decay lookDelta after applying so UI sets deltas each frame
-            lookDelta = Vector2.zero;
+            if (Mathf.Abs(horizontal) > joystickDeadzone || Mathf.Abs(vertical) > joystickDeadzone)
+            {
+                inputDirection = new Vector3(horizontal, 0f, vertical);
+            }
+
+            // Mobile joystick input
+            if (joystick != null)
+            {
+                Vector2 joystickInput = joystick.Value;
+                if (joystickInput.magnitude > joystickDeadzone)
+                {
+                    inputDirection = new Vector3(joystickInput.x, 0f, joystickInput.y);
+                }
+            }
+
+            // Normalize and apply movement
+            if (inputDirection.magnitude > 1f)
+            {
+                inputDirection.Normalize();
+            }
+
+            moveDirection = inputDirection * moveSpeed;
+            characterController.Move(moveDirection * Time.deltaTime);
+
+            isMoving = inputDirection.magnitude > joystickDeadzone;
         }
 
-        void HandleMove()
+        void HandleRotation()
         {
-            if (characterController == null) return;
+            if (!isMoving) return;
 
-            Vector3 forward = transform.forward * joystickInput.y;
-            Vector3 right = transform.right * joystickInput.x;
-            Vector3 move = (forward + right).normalized;
+            // Rotate towards movement direction
+            if (moveDirection != Vector3.zero)
+            {
+                Quaternion targetRotation = Quaternion.LookRotation(moveDirection);
+                transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSpeed * Time.deltaTime);
+            }
+        }
 
-            bool running = Input.GetKey(KeyCode.LeftShift); // placeholder for mobile run toggle
-            float speed = moveSpeed * (running ? runMultiplier : 1f);
+        // Public method for external systems to move player
+        public void MoveTo(Vector3 position)
+        {
+            characterController.enabled = false;
+            transform.position = position;
+            characterController.enabled = true;
+        }
 
-            Vector3 velocity = move * speed;
-
-            // gravity fallback
-            velocity.y += Physics.gravity.y * Time.deltaTime;
-
-            characterController.Move(velocity * Time.deltaTime);
+        // Interaction trigger
+        void OnTriggerEnter(Collider other)
+        {
+            if (other.CompareTag("StoreEntrance"))
+            {
+                var entrance = other.GetComponent<MarketHustle.Game.StoreEntrance>();
+                if (entrance != null)
+                {
+                    entrance.EnterStore();
+                }
+            }
         }
     }
 }
