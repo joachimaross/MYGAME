@@ -16,11 +16,20 @@ namespace MarketHustle.Audio
 
         [Header("Audio Clips")]
         public AudioClip backgroundMusic;
+        public AudioClip cityMusic;
+        public AudioClip storeMusic;
+        public AudioClip homeMusic;
         public AudioClip buttonClick;
         public AudioClip moneyEarned;
+        public AudioClip chaChing;
         public AudioClip propertyPurchased;
         public AudioClip doorOpen;
         public AudioClip pickupItem;
+        public AudioClip levelUpSound;
+        public AudioClip eventNotification;
+        public AudioClip reputationIncrease;
+        public AudioClip customerSatisfied;
+        public AudioClip customerDissatisfied;
 
         [Header("Settings")]
         [Range(0f, 1f)] public float masterVolume = 1f;
@@ -101,6 +110,11 @@ namespace MarketHustle.Audio
             PlaySFX(moneyEarned);
         }
 
+        public void PlayChaChing()
+        {
+            PlaySFX(chaChing);
+        }
+
         public void PlayPropertyPurchased()
         {
             PlaySFX(propertyPurchased);
@@ -114,6 +128,59 @@ namespace MarketHustle.Audio
         public void PlayPickupItem()
         {
             PlaySFX(pickupItem);
+        }
+
+        public void PlayLevelUp()
+        {
+            PlaySFX(levelUpSound);
+        }
+
+        public void PlayEventNotification()
+        {
+            PlaySFX(eventNotification);
+        }
+
+        public void PlayReputationIncrease()
+        {
+            PlaySFX(reputationIncrease);
+        }
+
+        public void PlayCustomerSatisfied()
+        {
+            PlaySFX(customerSatisfied);
+        }
+
+        public void PlayCustomerDissatisfied()
+        {
+            PlaySFX(customerDissatisfied);
+        }
+
+        // Dynamic music switching based on location
+        public void SwitchToCityMusic()
+        {
+            if (musicSource != null && cityMusic != null)
+            {
+                musicSource.clip = cityMusic;
+                musicSource.Play();
+            }
+        }
+
+        public void SwitchToStoreMusic()
+        {
+            if (musicSource != null && storeMusic != null)
+            {
+                musicSource.clip = storeMusic;
+                musicSource.Play();
+            }
+        }
+
+        public void SwitchToHomeMusic()
+        {
+            if (musicSource != null && homeMusic != null)
+            {
+                musicSource.clip = homeMusic;
+                musicSource.Play();
+            }
         }
 
         // Volume controls

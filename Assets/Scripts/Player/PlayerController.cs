@@ -5,10 +5,12 @@ namespace MarketHustle.Player
     /// <summary>
     /// Third-person player controller with mobile support.
     /// Handles movement, camera following, and basic interactions.
+    /// Integrates with needs and skills systems.
     /// </summary>
     public class PlayerController : MonoBehaviour
     {
         [Header("Movement")]
+        public float baseMoveSpeed = 5f;
         public float moveSpeed = 5f;
         public float rotationSpeed = 10f;
         public Transform cameraHolder;
@@ -20,6 +22,9 @@ namespace MarketHustle.Player
         private CharacterController characterController;
         private Vector3 moveDirection;
         private bool isMoving;
+
+        private PlayerNeeds playerNeeds;
+        private PlayerSkills playerSkills;
 
         void Start()
         {
@@ -46,6 +51,10 @@ namespace MarketHustle.Player
                     cameraHolder = cam.transform;
                 }
             }
+
+            // Get references to needs and skills systems
+            playerNeeds = GetComponent<PlayerNeeds>();
+            playerSkills = GetComponent<PlayerSkills>();
         }
 
         void Update()
@@ -82,6 +91,14 @@ namespace MarketHustle.Player
             {
                 inputDirection.Normalize();
             }
+
+            // Apply energy-based movement speed modifier
+            float currentSpeed = baseMoveSpeed;
+            if (playerNeeds != null)
+            {
+                currentSpeed *= Mathf.Lerp(0.5f, 1f, playerNeeds.GetEnergy() / 100f);
+            }
+            moveSpeed = currentSpeed;
 
             moveDirection = inputDirection * moveSpeed;
             characterController.Move(moveDirection * Time.deltaTime);
